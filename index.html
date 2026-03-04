@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rameur Trainer Web</title>
+
+<style>
+body{
+  margin:0;
+  background:black;
+  color:white;
+  font-family:Arial, sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container{
+  width:95%;
+  max-width:900px;
+  text-align:center;
+}
+
+.selector{ margin-bottom:15px; }
+
+select{
+  padding:8px;
+  font-size:16px;
+  border-radius:8px;
+}
+
+.timer{
+  font-size:80px;
+  font-weight:bold;
+  margin:10px 0;
+}
+
+.spm{
+  font-size:30px;
+  color:#00ff88;
+  margin-bottom:20px;
+}
+
+.bar{
+  width:100%;
+  height:20px;
+  background:#222;
+  border-radius:20px;
+  overflow:hidden;
+  margin:15px 0;
+}
+
+.bar-inner{
+  height:100%;
+  width:100%;
+  transition:background 0.1s;
+}
+
+.progress{
+  height:8px;
+  background:#333;
+  margin-top:15px;
+}
+
+.progress-inner{
+  height:100%;
+  background:#00ff88;
+  width:0%;
+}
+
+button{
+  margin:10px 5px;
+  padding:12px 25px;
+  font-size:18px;
+  border-radius:8px;
+  border:none;
+}
+
+.start{ background:#00aa66; color:white; }
+.pause{ background:#666; color:white; }
+.reset{ background:#aa3333; color:white; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="selector">
+<select id="daySelector" onchange="changeDay()"></select>
+</div>
+
+<div id="label"></div>
+<div class="timer" id="timer"></div>
+<div class="spm" id="spm"></div>
+
+<div class="bar">
+<div class="bar-inner" id="phaseBar"></div>
+</div>
+
+<div class="progress">
+<div class="progress-inner" id="progressBar"></div>
+</div>
+
+<div>
+<button class="start" onclick="startSession()">Start</button>
+<button class="pause" onclick="pauseSession()">Pause</button>
+<button class="reset" onclick="resetSession()">Reset</button>
+</div>
+
+</div>
+
+<script>
+const weekProgram={
+"Lundi":[{label:"Endurance",duration:900,spm:20}],
+"Mardi":[
+  {label:"Intervalles",duration:120,spm:24},
+  {label:"Récupération",duration:60,spm:20},
+  {label:"Intervalles",duration:120,spm:26}
+],
+"Mercredi":[{label:"Tempo",duration:1200,spm:22}],
+"Jeudi":[
+  {label:"Sprint",duration:45,spm:28},
+  {label:"Récupération",duration:75,spm:20},
+  {label:"Sprint",duration:45,spm:28}
+],
+"Vendredi":[{label:"Endurance",duration:1500,spm:21}],
+"Samedi":[
+  {label:"Intervalles longs",duration:300,spm:24},
+  {label:"Récupération",duration:120,spm:20},
+  {label:"Intervalles longs",duration:300,spm:26}
+],
+"Dimanche":[{label:"Récup active",duration:900,spm:18}]
+};
+
+let currentDay="Lundi";
+let program=weekProgram[currentDay];
+let index=0;
+let timeLeft=program[0].duration;
+let running=false;
+let phase="drive";
+let mainTimer;
+let strokeTimer;
+let audioCtx;
+
+function initSelector(){
+  const select=document.getElementById("daySelector");
+  for(const day in weekProgram){
+    const opt=document.createElement("option");
+    opt.value=day;
+    opt.textContent=day;
+    select.appendChild(opt);
+  }
+}
+
+function changeDay(){
+  currentDay=document.getElementById("daySelector").value;
+  program=weekProgram[currentDay];
+  resetSession();
+}
+
+function formatTime(s){
+  const m=Math.floor(s/60);
+  const sec=s%60;
+  return String(m).padStart(2,'0')+":"+String(sec).padStart(2,'0');
+}
+
+function updateDisplay(){
+  document.getElementById("label").textContent=program[index].label;
+  document.getElementById("timer").textContent=formatTime(timeLeft);
+  document.getElementById("spm").textContent="Cadence cible : "+program[index].spm+" SPM";
+
+  const total=program.reduce((a,b)=>a+b.duration,0);
+  const elapsed=program.slice(0,index).reduce((a,b)=>a+b.duration,0)+(program[index].duration-timeLeft);
+  document.getElementById("progressBar").style.width=(elapsed/total*100)+"%";
+}
+
+function clickSound(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.frequency.value=1000;
+  gain.gain.value=0.3;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime+0.05);
+}
+
+function startStrokeCycle(){
+  const stroke=60000/program[index].spm;
+  strokeTimer=setInterval(()=>{
+    phase=phase==="drive"?"catch":"drive";
+    document.getElementById("phaseBar").style.background=phase==="drive"?"#00ff88":"#0088ff";
+    if(phase==="drive") clickSound();
+  },stroke/2);
+}
+
+function startSession(){
+  if(running) return;
+  running=true;
+  startStrokeCycle();
+
+  mainTimer=setInterval(()=>{
+    if(timeLeft<=0){
+      clearInterval(strokeTimer);
+      if(index<program.length-1){
+        index++;
+        timeLeft=program[index].duration;
+        startStrokeCycle();
+      } else {
+        pauseSession();
+      }
+    } else {
+      timeLeft--;
+    }
+    updateDisplay();
+  },1000);
+}
+
+function pauseSession(){
+  running=false;
+  clearInterval(mainTimer);
+  clearInterval(strokeTimer);
+}
+
+function resetSession(){
+  pauseSession();
+  index=0;
+  timeLeft=program[0].duration;
+  phase="drive";
+  updateDisplay();
+}
+
+initSelector();
+updateDisplay();
+</script>
+</body>
+</html>
