@@ -104,19 +104,6 @@ Elle peut être ouverte directement dans un navigateur :
 
 ---
 
-# 🎥 Vidéo immersive (optionnel)
-
-L'application peut être configurée avec une **vidéo de paysage en arrière-plan** pour simuler une sortie en bateau.
-
-La vidéo doit être :
-
-* au format **MP4**
-* **muette**
-* courte (10–20 secondes)
-* configurée en **loop**
-
----
-
 # 🛠 Technologies utilisées
 
 Projet volontairement simple :
