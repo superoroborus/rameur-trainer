@@ -1,8 +1,3 @@
-# rameur-trainer
-Application d'entrainement très simple pour rameur à retrouver à l'adresse suivante : https://superoroborus.github.io/rameur-trainer/
-
-<img width="831" height="389" alt="image" src="https://github.com/user-attachments/assets/7473b571-a834-4f13-a4ba-4a40f5a87796" />
-
 # 🚣 Rameur Trainer
 
 Application web simple pour s'entraîner au **rameur indoor** lorsque l'écran du rameur est cassé ou absent.
@@ -11,6 +6,8 @@ Application web simple pour s'entraîner au **rameur indoor** lorsque l'écran d
 
 🔗 **Application en ligne :**
 https://superoroborus.github.io/rameur-trainer/
+
+<img width="831" height="389" alt="image" src="https://github.com/user-attachments/assets/7473b571-a834-4f13-a4ba-4a40f5a87796" />
 
 ---
 
