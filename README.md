@@ -107,7 +107,7 @@ Projet volontairement simple :
 
 * HTML
 * CSS
-* JavaScript
+
 
 Aucun framework ni dépendance externe.
 
